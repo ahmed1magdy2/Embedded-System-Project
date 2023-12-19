@@ -1,0 +1,9 @@
+main DSTACK_USAGE:2 DSTACK_LEVEL:2 FILE:"key_lcd.c" LINE:45
+Welcome_Display DSTACK_USAGE:2 DSTACK_LEVEL:4 FILE:"key_lcd.c" LINE:369
+lcd_printf DSTACK_USAGE:10 DSTACK_LEVEL:14 FILE:"C:\cvavreval\lib\stdio.lib" LINE:2269
+_print DSTACK_USAGE:20 DSTACK_LEVEL:34 FILE:"C:\cvavreval\lib\stdio.lib" LINE:597
+strlen DSTACK_USAGE:2 DSTACK_LEVEL:36 FILE:"C:\cvavreval\lib\string.lib" LINE:1722
+ext0 DSTACK_USAGE:12 DSTACK_LEVEL:48 FILE:"key_lcd.c" LINE:402
+lcd_printf DSTACK_USAGE:10 DSTACK_LEVEL:58 FILE:"C:\cvavreval\lib\stdio.lib" LINE:2269
+_print DSTACK_USAGE:20 DSTACK_LEVEL:78 FILE:"C:\cvavreval\lib\stdio.lib" LINE:597
+strlen DSTACK_USAGE:2 DSTACK_LEVEL:80 FILE:"C:\cvavreval\lib\string.lib" LINE:1722

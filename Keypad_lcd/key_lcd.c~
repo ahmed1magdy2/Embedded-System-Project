@@ -1,0 +1,467 @@
+/*
+ * key_lcd.c
+ *
+ * Created: 12/19/2023 1:32:23 PM
+ * Author: Ahmed Magdy
+ */
+
+#include <mega16.h>
+#include <alcd.h>
+#include <delay.h>
+//////////////////////////////////
+#define  bit_set(r,b) r |= (1<<b)
+#define  bit_clr(r,b) r &= ~(1<<b)
+///////////////////////////////////
+ // functions
+char keypad();
+unsigned char EE_Read(unsigned int address);
+void EE_Write(unsigned int address, unsigned char data);
+char get_address_id(char ID);
+char get_address_pc(char PC);
+void Welcome_Display(char userID);
+void peep();
+
+
+ // global varaiables 
+ int x1=0;
+char i=0;
+char j=0;
+char userID;
+char passCode;
+char newPassCode;
+char renterPassCode;
+char IDAdmin = 111;
+char ID2 = 222;
+char ID3 = 333;
+char ID4 = 444;
+char PCAdmin = 111;
+char PC2 = 222;
+char PC3 = 333;
+char PC4 = 444;
+char flagID;
+char flagPC;
+
+
+void main(void)
+{
+    int x1 = 0;
+    //int x2 = 0;
+    DDRC = 0b00000111;
+    PORTC = 0b11111000;
+    lcd_init(16);
+    lcd_clear(); 
+     
+     // store IDs and PCs in the EEPROM  run it atleast one time 
+//       EE_Write(1,IDAdmin);
+//       EE_Write(2,PCAdmin);
+//       EE_Write(3,ID2);
+//       EE_Write(4,PC2);
+//       EE_Write(5,ID3);
+//       EE_Write(6,PC3);
+//       EE_Write(7,ID4);
+//       EE_Write(8,PC4);  
+      
+      
+      //////////////////////////////////////////////////////////
+       // first way : 
+        //MCUCR |= (1<<1);
+        // another and better way : 
+        bit_set(MCUCR,1); // the same as first way 
+        bit_clr(MCUCR,0); // MCUCR &= ~(1<<0); 
+    
+        // way to enable global interrupt : 
+        #asm("sei") // SREG.7 = 1  
+    
+        // way to enable EXT0 specific : 
+        bit_set(GICR,6);
+        ///////////////////////////////////////////////////////
+                                              
+         DDRB.0 = 1;      // output
+    
+    while (1)
+        {   
+            lcd_clear();
+            lcd_printf("To Open the Door Click * ");
+            x1 = keypad();          
+            if (x1 == 10) {
+                int x1=0;
+                lcd_clear();
+                lcd_printf("Enter your ID    "); 
+                userID = 0;
+                //
+                for (i = 0; i < 3; i++) { 
+                x1 = keypad();
+                lcd_printf("%d",x1); 
+                userID = userID * 10 + x1; //+ (x1 - '0');
+                }   
+                lcd_clear();
+                
+                
+                flagID =0; 
+                // check the ID
+                flagID = get_address_id(userID);
+                if (flagID) 
+                {    // 3 chanses to enter pass Code
+                    for (j=0; j<3;j++)
+                    {    
+                        lcd_clear();
+                       lcd_printf("Enter your Pass Code ");
+                       passCode=0; 
+                       for (i = 0; i < 3; i++) { 
+                            x1 = keypad();
+                            lcd_printf("*"); 
+                            passCode = passCode * 10 + x1; //+ (x1 - '0');
+                        }          
+                        // check the pass code
+                        flagPC = 0;
+                        flagPC = get_address_pc(passCode);
+                        if (flagID == flagPC - 1)
+                        { 
+                            Welcome_Display(flagID);
+                            delay_ms(500);
+                            break; 
+                        }
+                        else{    
+                            lcd_clear();
+                            lcd_printf("Sorry, Wrong PC ");
+                            // one peep
+                            peep();
+                            delay_ms(100);
+                        } 
+                    }
+                }
+                    else 
+                    {    
+                        lcd_clear();
+                        lcd_printf("Wrong ID ");
+                        // 2 peep
+                        peep();
+                        peep();
+                        delay_ms(100);
+                    }
+          }
+
+          else if (x1 == 11)
+          {
+                int x1=0;
+                lcd_clear();
+                lcd_printf("Enter your ID    "); 
+                userID = 0;
+                //
+                for (i = 0; i < 3; i++) { 
+                x1 = keypad();
+                lcd_printf("%d",x1); 
+                userID = userID * 10 + x1; //+ (x1 - '0');
+                }   
+                lcd_clear();
+                //lcd_printf(" the student id = %d",studentID);
+                flagID =0; 
+                // check the ID
+                flagID = get_address_id(userID);
+
+                if (flagID) 
+                {    // 3 chanses to enter pass Code
+  
+                    lcd_clear();
+                   lcd_printf("Enter the Old PC ");
+                   passCode =0; 
+                   for (i = 0; i < 3; i++) { 
+                        x1 = keypad();
+                        lcd_printf("*"); 
+                        passCode = passCode * 10 + x1; //+ (x1 - '0');
+                    }          
+                    // check the pass code
+                    flagPC = 0;
+                    flagPC = get_address_pc(passCode);
+                    if (flagID == flagPC - 1)
+                    {                
+                    
+                        lcd_clear();
+                        lcd_printf("Enter the New PC ");
+                        newPassCode =0;
+                        for (i = 0; i < 3; i++) { 
+                            x1 = keypad();
+                            lcd_printf("*"); 
+                            newPassCode = newPassCode * 10 + x1; //+ (x1 - '0');
+                        }     
+                        lcd_clear();
+                        lcd_printf("Renter the New PC ");
+                        renterPassCode =0;
+                        for (i = 0; i < 3; i++) { 
+                            x1 = keypad();
+                            lcd_printf("*"); 
+                            renterPassCode = renterPassCode * 10 + x1; //+ (x1 - '0');
+                        }
+                        if (newPassCode == renterPassCode)
+                        {
+                            EE_Write(flagPC,newPassCode);
+                             lcd_clear();
+                           lcd_printf("New PC is Stored");
+                           delay_ms(500);
+                            
+                        }
+                        else  
+                        {    
+                            lcd_clear();
+                           lcd_printf("Contact Admin ");
+                           peep();
+                           peep();
+                        }
+                        
+                        
+                        
+                         
+                    }
+                    else{    
+                        lcd_clear();
+                        lcd_printf("Wrong PC,Contact Admin ");
+                        peep();
+                        peep();
+                    } 
+
+                    
+                }
+                    else 
+                    {    
+                        lcd_clear();
+                        lcd_printf("Wrong ID,Contact Admin ");
+                        // 2 peep
+                        peep();
+                        peep();
+                    }
+          
+                      
+          }
+    }
+}
+
+char keypad()
+{
+    while(1)
+        {
+            PORTC.0 = 0; PORTC.1 = 1; PORTC.2 = 1;
+            //Only C1 is activated
+            switch(PINC)
+            {
+                case 0b11110110:
+                while (PINC.3 == 0);
+                return 1;
+                break;
+                
+                case 0b11101110:
+                while (PINC.4 == 0);
+                return 4;
+                break;
+                
+                case 0b11011110:
+                while (PINC.5 == 0);
+                return 7;
+                break;
+                
+                case 0b10111110:
+                while (PINC.6 == 0);
+                return 10;
+                break;
+                
+            }
+            PORTC.0 = 1; PORTC.1 = 0; PORTC.2 = 1;
+            //Only C2 is activated
+            switch(PINC)
+            {
+                case 0b11110101:
+                while (PINC.3 == 0);
+                return 2;
+                break;
+                
+                case 0b11101101:
+                while (PINC.4 == 0);
+                return 5;
+                break;
+                
+                case 0b11011101:
+                while (PINC.5 == 0);
+                return 8;
+                break;
+                
+                case 0b10111101:
+                while (PINC.6 == 0);
+                return 0;
+                break;
+                
+            }
+            PORTC.0 = 1; PORTC.1 = 1; PORTC.2 = 0;
+            //Only C3 is activated
+            switch(PINC)
+            {
+                case 0b11110011:
+                while (PINC.3 == 0);
+                return 3;
+                break;
+                
+                case 0b11101011:
+                while (PINC.4 == 0);
+                return 6;
+                break;
+                
+                case 0b11011011:
+                while (PINC.5 == 0);
+                return 9;
+                break;
+                
+                case 0b10111011:
+                while (PINC.6 == 0);
+                return 11;
+                break;
+                
+            }  
+        
+		}
+}
+
+unsigned char EE_Read(unsigned int address)
+{
+ while(EECR.1 == 1);    //Wait till EEPROM is ready                  
+ EEAR = address;        //Prepare the address you want to read from
+ 
+ EECR.0 = 1;            //Execute read command
+ 
+ return EEDR;
+
+}
+
+void EE_Write(unsigned int address, unsigned char data)
+{
+ while(EECR.1 == 1);    //Wait till EEPROM is ready                
+ EEAR = address;        //Prepare the address you want to read from
+ EEDR = data;           //Prepare the data you want to write in the address above
+ EECR.2 = 1;            //Master write enable
+ EECR.1 = 1;            //Write Enable
+}
+
+
+
+char get_address_id(char ID)
+{       char res=0;
+      for (i =1; i<=8; i = i+2)
+               {
+                  if (EE_Read(i) == userID)
+                  {
+                       res = i;
+                       break;
+                  }
+               }
+      return res;
+}
+char get_address_pc(char PC)
+{
+    char res=0;
+  for (i =2; i<=8; i = i+2)
+    {
+      if (EE_Read(i) == passCode)
+      {
+           res = i;
+           break;
+      }
+    } 
+    return res;
+}
+
+void Welcome_Display(char addr_ID)
+{
+    lcd_clear();
+    if (addr_ID == 1)
+    {
+           lcd_printf("Welcome, Admin ");   
+    }                                    
+    else
+    {        
+           lcd_printf("Welcome, Student ");
+           if (addr_ID == 3)
+               lcd_printf("Ahmed ");
+           else if (addr_ID == 5)
+               lcd_printf("Mohamed ");
+           else if (addr_ID == 7)
+               lcd_printf("Mahmoud ");
+    }
+
+}
+
+void peep()
+{
+ PORTB.0 = 1;
+ delay_ms(100);
+ PORTB.0 = 0;
+}
+
+// Write ISR
+// number in practes [] is vecgtor number : means the number 
+//of ibterupt to know when we run the code 
+// there is  a table for every interupt in the book : 
+ 
+interrupt [2] void ext0 (void)
+{
+    
+    lcd_clear();
+    lcd_printf("Enter Admin Pass Code ");
+    x1=0;
+    passCode=0; 
+   for (i = 0; i < 3; i++) { 
+        x1 = keypad();
+        lcd_printf("*"); 
+        passCode = passCode * 10 + x1; //+ (x1 - '0');
+    } 
+    if (passCode == EE_Read(2))
+    {
+      lcd_clear();
+        lcd_printf("Enter Student ID    "); 
+        userID = 0;
+        //
+        for (i = 0; i < 3; i++) { 
+        x1 = keypad();
+        lcd_printf("%d",x1); 
+        userID = userID * 10 + x1; //+ (x1 - '0');
+        }   
+        lcd_clear();
+        //lcd_printf(" the student id = %d",studentID);
+        flagID =0; 
+        // check the ID
+        flagID = get_address_id(userID);
+
+        if (flagID) 
+        {    // 3 chanses to enter pass Code
+      
+            lcd_clear();
+           lcd_printf("Enter the New PC ");
+             
+             newPassCode =0; 
+           for (i = 0; i < 3; i++) { 
+                x1 = keypad();
+                lcd_printf("*"); 
+                newPassCode = newPassCode * 10 + x1; //+ (x1 - '0');
+            }          
+            EE_Write(flagID + 1,newPassCode);
+             lcd_clear();
+           lcd_printf("New PC is Stored");
+           delay_ms(500);     
+           
+        }
+        else{
+             lcd_clear();
+            lcd_printf("Contact Admin");
+            // 2 peep
+            peep();
+            peep();
+        }
+    }
+    else{
+         lcd_clear();
+         lcd_printf("Contact Admin");
+         // 2 peep
+         peep();
+         peep();
+    }
+    
+    
+
+    // break;
+}

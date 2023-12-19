@@ -1,0 +1,50 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+flagID                                                                            0x0160       1
+flagPC                                                                            0x0161       1
+_base_y (alcd.lib)                                                                0x0162       4
+_lcd_x                                                                            0x0166       1
+_lcd_y                                                                            0x0167       1
+_lcd_maxx                                                                         0x0168       1
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+x1                                                                                R4,R5        2
+i                                                                                 R7           1
+j                                                                                 R6           1
+userID                                                                            R9           1
+passCode                                                                          R8           1
+newPassCode                                                                       R11          1
+renterPassCode                                                                    R10          1
+IDAdmin                                                                           R13          1
+ID2                                                                               R12          1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+main                                                                              0x00122    202
+keypad                                                                            0x001EC     94
+EE_Read                                                                           0x0024A     10
+EE_Write                                                                          0x00254     14
+get_address_id                                                                    0x00262     17
+get_address_pc                                                                    0x00273     20
+Welcome_Display                                                                   0x00287     31
+peep                                                                              0x002A6      9
+ext0                                                                              0x002AF    109
+_lcd_write_nibble_G100                                                            0x0031C     21
+_lcd_write_data                                                                   0x00331     13
+lcd_gotoxy                                                                        0x0033E     20
+lcd_clear                                                                         0x00352     12
+lcd_putchar                                                                       0x0035E     30
+lcd_init                                                                          0x0037C     44
+_print_G101                                                                       0x003A8    296
+put_lcd_G101                                                                      0x004D0     14
+lcd_printf                                                                        0x004DE     39
+strlen                                                                            0x00505     12
+strlenf                                                                           0x00511     13
